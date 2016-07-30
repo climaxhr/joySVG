@@ -1,15 +1,27 @@
-var SVGJoystick = function(el, userOnMove, userOnMoveEnd) {
+var joySVG = function(el, userOnMove, userOnMoveEnd, limitX, limitY ) {
   var thisJoy = this;
-  thisJoy.parentElement = el;
-  thisJoy.stick = document.getElementById("stick");
+  
+  thisJoy.stickElement = el;
   thisJoy.xValue = 0;
   thisJoy.yValue = 0;
-  thisJoy.getCoordinates = function() {
+  
+  thisJoy.getOffset = function() {
+    //returns offset from center in pixel
     return {
       x: thisJoy.xValue,
       y: thisJoy.yValue
     };
   }
+  
+   thisJoy.getPosition = function() {
+    //returns coordinates in percentage of limit
+     //we are inverting coordinates for y by subtracting from 0
+     return {
+      x: Math.round(percOf(thisJoy.xValue,limitX)),
+      y: 0 - Math.round(percOf(thisJoy.yValue,limitY))
+    };
+  }
+  
   thisJoy.onMoveEnd = function() {
     userOnMoveEnd(thisJoy);
   }
@@ -18,13 +30,13 @@ var SVGJoystick = function(el, userOnMove, userOnMoveEnd) {
     userOnMove(thisJoy);
   }
 
-  var dragStick = new Draggable.create(thisJoy.stick, {
+  var dragStick = new Draggable.create(thisJoy.stickElement, {
     type: "x,y",
     bounds: {
-      maxY: 100,
-      minY: -100,
-      minX: -100,
-      maxX: 100
+      maxY: limitY,
+      minY: -limitY,
+      minX: -limitX,
+      maxX: limitX
     },
     onDragStart: function() {
 
@@ -39,9 +51,10 @@ var SVGJoystick = function(el, userOnMove, userOnMoveEnd) {
     onDragEnd: function() {
       thisJoy.onMoveEnd();
     },
+   
     onRelease: function() {
 
-      TweenMax.to(thisJoy.stick, 0.4, {
+      TweenMax.to(thisJoy.stickElement, 0.4, {
         x: 0,
         y: 0,
         ease: Elastic.easeOut
@@ -53,5 +66,11 @@ var SVGJoystick = function(el, userOnMove, userOnMoveEnd) {
 
   });
 
-  console.log('joystick instantiated on ' + el);
+ function percOf(a,b) {
+ c = a/b;
+ return c*100;
+ }
+  
+  
+  console.log('joystick instantiated on ' + thisJoy.stickElement);
 };
